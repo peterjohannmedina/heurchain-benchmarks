@@ -1,0 +1,25 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.venv/
+venv/
+env/
+.env
+
+# Bench outputs — these will be generated on each run
+results/
+*.json.results
+*.csv
+
+# Dataset (large; not redistributed here — see README for fetch instructions)
+bench_data/LongMemEval/
+bench_data/longmemeval_*.json
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
