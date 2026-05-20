@@ -14,8 +14,10 @@ env/
 # force-added to the repo via `git add -f`; everything else stays local.
 results/*
 !results/README.md
+!results/COMPARISON_v2_cloud_judge.md
 !results/*_max30.json
 !results/6cats_v2_summary.txt
+!results/cloud_judge_*_summary.txt
 *.json.results
 *.csv
 

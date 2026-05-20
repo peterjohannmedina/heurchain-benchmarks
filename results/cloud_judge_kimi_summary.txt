@@ -1,0 +1,39 @@
+Cloud-judge re-run: model=kimi-k2.6:cloud started at Tue May 19 11:41:42 PM PDT 2026
+
+=== single-session-assistant ===
+  start: Tue May 19 11:41:42 PM PDT 2026
+Failures:      0
+  QA Accuracy: 36.67%
+  done:  Tue May 19 11:48:01 PM PDT 2026
+
+=== temporal-reasoning ===
+  start: Tue May 19 11:48:01 PM PDT 2026
+Failures:      0
+  QA Accuracy: 3.33%
+  done:  Tue May 19 11:54:17 PM PDT 2026
+
+=== single-session-user ===
+  start: Tue May 19 11:54:17 PM PDT 2026
+Failures:      0
+  QA Accuracy: 53.33%
+  done:  Tue May 19 11:58:33 PM PDT 2026
+
+=== single-session-preference ===
+  start: Tue May 19 11:58:33 PM PDT 2026
+Failures:      0
+  QA Accuracy: 3.33%
+  done:  Wed May 20 12:09:37 AM PDT 2026
+
+=== knowledge-update ===
+  start: Wed May 20 12:09:37 AM PDT 2026
+Failures:      0
+  QA Accuracy: 53.33%
+  done:  Wed May 20 12:18:00 AM PDT 2026
+
+=== multi-session ===
+  start: Wed May 20 12:18:00 AM PDT 2026
+Failures:      0
+  QA Accuracy: 20.00%
+  done:  Wed May 20 12:27:39 AM PDT 2026
+
+All kimi categories complete at Wed May 20 12:27:39 AM PDT 2026

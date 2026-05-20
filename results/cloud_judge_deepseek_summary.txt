@@ -1,0 +1,39 @@
+Cloud-judge re-run: model=deepseek-v3.1:671b-cloud started at Tue May 19 11:17:58 PM PDT 2026
+
+=== single-session-assistant ===
+  start: Tue May 19 11:17:58 PM PDT 2026
+Failures:      0
+  QA Accuracy: 50.00%
+  done:  Tue May 19 11:20:26 PM PDT 2026
+
+=== temporal-reasoning ===
+  start: Tue May 19 11:20:26 PM PDT 2026
+Failures:      0
+  QA Accuracy: 3.33%
+  done:  Tue May 19 11:23:16 PM PDT 2026
+
+=== single-session-user ===
+  start: Tue May 19 11:23:16 PM PDT 2026
+Failures:      0
+  QA Accuracy: 53.33%
+  done:  Tue May 19 11:25:44 PM PDT 2026
+
+=== single-session-preference ===
+  start: Tue May 19 11:25:44 PM PDT 2026
+Failures:      0
+  QA Accuracy: 23.33%
+  done:  Tue May 19 11:28:28 PM PDT 2026
+
+=== knowledge-update ===
+  start: Tue May 19 11:28:28 PM PDT 2026
+Failures:      0
+  QA Accuracy: 53.33%
+  done:  Tue May 19 11:31:06 PM PDT 2026
+
+=== multi-session ===
+  start: Tue May 19 11:31:06 PM PDT 2026
+Failures:      0
+  QA Accuracy: 6.67%
+  done:  Tue May 19 11:33:50 PM PDT 2026
+
+All deepseek categories complete at Tue May 19 11:33:50 PM PDT 2026
