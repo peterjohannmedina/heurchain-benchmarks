@@ -27,6 +27,10 @@ These scripts evaluate HeurChain on the **[LongMemEval-S](https://github.com/xia
 
 These are reproducible from this harness against the broker in the [main HeurChain repo](https://github.com/peterjohannmedina/heurchain).
 
+### Full per-task results
+
+The complete v2 fact-extraction run across all 6 LongMemEval-S categories — including per-task records, judge verdicts, and a mean QA accuracy of 32.8% (local 14B judge) / 87.8% retrieval Hit@10 — is published in **[`results/`](results/)**. That directory's [README](results/README.md) walks through the headline numbers, honest comparison to Mem0's 49.4%, and what the gap between Hit@10 and QA accuracy actually means.
+
 ---
 
 ## Honest bias disclosure

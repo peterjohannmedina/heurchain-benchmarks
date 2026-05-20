@@ -9,8 +9,13 @@ venv/
 env/
 .env
 
-# Bench outputs — these will be generated on each run
-results/
+# Bench outputs — user-generated runs go here (gitignored by default).
+# Curated published results (e.g. results/*_max30.json from canonical runs) are
+# force-added to the repo via `git add -f`; everything else stays local.
+results/*
+!results/README.md
+!results/*_max30.json
+!results/6cats_v2_summary.txt
 *.json.results
 *.csv
 

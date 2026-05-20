@@ -1,0 +1,51 @@
+Path A re-run (speaker-aware prompt) started at Mon May 18 04:30:58 AM PDT 2026
+
+=== Category: single-session-assistant ===
+  start: Mon May 18 04:30:58 AM PDT 2026
+  done:  Mon May 18 10:50:50 AM PDT 2026
+  QA Accuracy: 43.33%
+  Hit@10: 100.00%
+  n: 30
+  Facts/session avg: 12.4
+
+=== Category: temporal-reasoning ===
+  start: Mon May 18 10:50:50 AM PDT 2026
+  done:  Mon May 18 05:16:10 PM PDT 2026
+  QA Accuracy: 10.00%
+  Hit@10: 83.33%
+  n: 30
+  Facts/session avg: 12.8
+
+=== Category: single-session-user ===
+  start: Mon May 18 05:16:10 PM PDT 2026
+  done:  Mon May 18 11:47:07 PM PDT 2026
+  QA Accuracy: 53.33%
+  Hit@10: 86.67%
+  n: 30
+  Facts/session avg: 12.2
+
+=== Category: single-session-preference ===
+  start: Mon May 18 11:47:07 PM PDT 2026
+  done:  Tue May 19 06:12:33 AM PDT 2026
+  QA Accuracy: 13.33%
+  Hit@10: 60.00%
+  n: 30
+  Facts/session avg: 12.3
+
+=== Category: knowledge-update ===
+  start: Tue May 19 06:12:34 AM PDT 2026
+  done:  Tue May 19 12:33:44 PM PDT 2026
+  QA Accuracy: 60.00%
+  Hit@10: 100.00%
+  n: 30
+  Facts/session avg: 12.5
+
+=== Category: multi-session ===
+  start: Tue May 19 12:33:44 PM PDT 2026
+  done:  Tue May 19 06:49:50 PM PDT 2026
+  QA Accuracy: 16.67%
+  Hit@10: 96.67%
+  n: 30
+  Facts/session avg: 12.7
+
+All v2 categories done at Tue May 19 06:49:50 PM PDT 2026
