@@ -76,6 +76,57 @@ python3 multitenant_bench.py --mode load --max-tenants 50 --qps-per-tenant 5
 
 The published 20.5 ms p95 multi-tenant latency comes from `--mode load --max-tenants 10 --qps-per-tenant 5` against the broker's Docker compose stack.
 
+### `judge_rerun_cloud.py` — cross-judge QA validation
+
+Re-runs only Phase 2 (answer + judge) on a cached fact-extraction result, with a configurable cloud model. Skips the ~6h Phase 1 LLM-driven ingestion. Used to produce the cross-judge analysis in [`results/COMPARISON_v2_cloud_judge.md`](results/COMPARISON_v2_cloud_judge.md).
+
+Key flags:
+
+```bash
+# Same model for both answer + judge (back-compat shortcut):
+python3 judge_rerun_cloud.py --input <cached.json> --output <new.json> \
+  --model deepseek-v3.1:671b-cloud \
+  --base-url http://192.168.1.242:11434/v1
+
+# Cross-judging — different model for answer vs judge (removes self-bias):
+python3 judge_rerun_cloud.py --input <cached.json> --output <new.json> \
+  --answer-model deepseek-v3.1:671b-cloud \
+  --judge-model  kimi-k2.6:cloud
+
+# Mixed API (local model answers, Anthropic judges):
+python3 judge_rerun_cloud.py --input <cached.json> --output <new.json> \
+  --answer-model medina-14b:latest --answer-base-url http://localhost:11434/v1 \
+  --judge-model  claude-sonnet-4-6 --judge-api anthropic
+```
+
+Each output record gains diagnostic fields documenting whether the retrieved facts actually contained the gold answer — separating extraction failures from answerer failures:
+
+| Field | Meaning |
+|---|---|
+| `fact_contains_gold` | True if ≥70% of gold-answer content tokens appear in retrieved_facts |
+| `fact_gold_overlap_score` | 0.0–1.0 raw overlap score |
+| `answer_model` / `judge_model` | which model produced this record's response and verdict |
+
+Per-run summary stats added to `cloud_judge` metadata:
+- `fact_contains_gold_rate` — what fraction of questions had retrievably-answerable facts (extraction-quality signal)
+- `refusal_rate` — what fraction of answer responses were `"I don't know"` or empty (calibration signal)
+
+### `compute_agreement.py` — inter-judge agreement analyzer
+
+Compute per-question verdict agreement across multiple judge runs. **A higher per-question agreement rate across independent frontier judges is a stronger defensibility signal than any single judge's QA accuracy number.**
+
+```bash
+# Pairwise agreement for one category:
+python3 compute_agreement.py --category single-session-assistant \
+  --runs 'results/facts_v2_*.json' 'results/facts_v2cloud-*.json'
+
+# All-categories report + cross-category summary:
+python3 compute_agreement.py --all-categories \
+  --runs 'results/facts_v2_*.json' 'results/facts_v2cloud-*.json'
+```
+
+In the May 2026 cross-judge run, DeepSeek V3.1 671B and Kimi K2.6 agreed on **87.8%** of per-question verdicts across 180 questions — the cross-frontier agreement number that validates each as an independent judge. See [`results/COMPARISON_v2_cloud_judge.md`](results/COMPARISON_v2_cloud_judge.md).
+
 ---
 
 ## Setup — fastest path
