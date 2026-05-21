@@ -70,18 +70,81 @@ For each version: what it does differently, what's known to lift, what regressed
 
 ---
 
-## v4 — TBD: ISO date tagging
+## v4 — ISO date tagging (extraction layer)
 
-**Status:** planned, not yet built.
+**File:** [`extraction_prompt_v4.py`](extraction_prompt_v4.py)
 
-**Hypothesis:** the temporal-reasoning failure mode is that v3 facts say "the user visited MoMA today" instead of "the user visited MoMA on 2024-03-15". With explicit ISO dates in facts, the answerer can perform date arithmetic.
+**Diff from v3:** receives the SESSION_DATE from dataset metadata (LongMemEval's `haystack_dates`); requires each fact to carry an explicit `[date: YYYY-MM-DD]` ISO tag, resolving relative phrases ("today", "yesterday", "3 weeks ago") against the session date.
 
-**Planned diff from v3:**
-- NEW rule: tag each fact with an explicit ISO date (`[date: YYYY-MM-DD]`) when the conversation contains an absolute or inferable date.
-- NEW: when a session's date is known from session metadata (e.g. session timestamp), thread it into relative-date facts ("yesterday" → explicit date).
-- KEEP all v3 rules unchanged.
+**Targeted measurement** (`targeted_reextract.py` on the 22 temporal-reasoning EXTRACTION failures from v3 DeepSeek):
 
-**Test plan:** use `targeted_reextract.py` with `extraction_prompt_v4.py` on the temporal-reasoning EXTRACTION failures from v3. ~10 min decision loop. If lift, full v4 overnight re-extract.
+| Metric | Value |
+|---|---:|
+| Wins (0→1) | **1/22 (4.5%)** |
+| Losses (1→0) | 0 |
+| Facts contain gold (token-overlap heuristic) | 0/22 |
+
+**Findings:** extraction is doing its job (every fact gets an ISO date), but the lift didn't materialize because **the answerer doesn't know today's date** (for "how many X ago" questions) and **retrieval doesn't surface multiple events** (for "between X and Y" questions). v4 alone is necessary but insufficient.
+
+---
+
+## v4a — date-aware answer prompt (FIRST answer-layer iteration)
+
+**File:** [`answer_prompt_v4a.py`](answer_prompt_v4a.py)
+
+**Diff from baseline ANSWER_PROMPT:** receives the `{question_date}` from the dataset's `question_date` metadata; instructs the answerer to compute `(question_date − event_date)` using ISO tags in facts. Retains the existing "if no fact answers... reply: I don't know" rule.
+
+**Targeted measurement** (`targeted_reanswer.py` on v4 facts of the same 22 failures):
+
+| Metric | Value |
+|---|---:|
+| Wins | **2/22 (9.1%)** vs v4 alone's 1/22 |
+| Refusal rate | 81.8% |
+
+**Findings:** correct cases now do real date arithmetic (e.g. "You met Emma 9 days ago." for gold "9 days ago"). But refusal rate stays high because the strict "I don't know" instruction trips even when the relevant event IS in facts with a date.
+
+---
+
+## v4b — softer answerer (SECOND answer-layer iteration)
+
+**File:** [`answer_prompt_v4b.py`](answer_prompt_v4b.py)
+
+**Diff from v4a:** narrowed the refusal threshold. Only refuse if (a) the relevant event is NOT mentioned in any fact, OR (b) the relevant fact has NO ISO date AND no anchor. Otherwise, attempt the arithmetic and round to the nearest unit the question asks for.
+
+**Targeted measurement** (same 22 failures, same v4 facts):
+
+| Metric | Value |
+|---|---:|
+| **Wins** | **7/22 (31.8%)** ← +6 over v4a |
+| Losses | 0 |
+| Refusal rate | 54.5% (down from 81.8%) |
+| Wall time | 1.7 min |
+
+**Findings:** ~25 minutes of answer-prompt iteration produced a +27.3pp recovery on the 22 v3 EXTRACTION failures. The "still refusing" cases (5/15 remaining) are all "between A and B" multi-event questions where one event's session wasn't retrieved.
+
+---
+
+## v4c — event index (PROPOSED, not yet built)
+
+**Justification from the v4b triage:** of v4b's 15 remaining wrong answers, 7 are pure retrieval misses (relevant session not in top-10) and 5 are multi-event "between" questions where one of two needed events is missing from facts. **80%+ of the residual is retrieval / multi-event-retrieval shaped.**
+
+**Proposed design:**
+- At extraction time, parse v4 facts for `[date: YYYY-MM-DD]` tags + named-event phrases → populate a side `events` SQLite table: `(event_phrase, iso_date, session_id, fact_id)`.
+- At query time, detect "between/order/ago" patterns → query the events table in parallel with regular retrieval → pass both as context to the answerer.
+- Targeted test the same way: `targeted_reretrieve.py` (sibling track 3 of the Karpathy cycle, also not yet built).
+
+Expected lift: addresses the ~12/15 remaining failures. If even half land, full v4+v4b+event-index temporal-reasoning could reach 40-55% (vs v3's 3.33%).
+
+---
+
+## Multi-track iteration matrix (what we have now)
+
+|                  | Answer v0 (baseline) | Answer v4a | **Answer v4b** |
+|---|---:|---:|---:|
+| Extraction v3 (baseline) | 3.33% (full cat) | not tested | not tested |
+| **Extraction v4 (ISO dates)** | 4.5% (on failures) | 9.1% (on failures) | **31.8% (on failures)** |
+
+Each cell is one targeted run. The +27.3pp move from v4-alone to v4+v4b was a ~7 min cycle. **This is the value of separating extraction + answer iteration tracks** — without `targeted_reanswer.py` we'd have wrongly attributed v4's null result to the prompt itself and moved on.
 
 ---
 
