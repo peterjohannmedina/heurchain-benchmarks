@@ -1,0 +1,21 @@
+v3 cross-judge: model=deepseek-v3.1:671b-cloud started at Thu May 21 01:51:01 AM PDT 2026
+
+=== multi-session ===
+  start: Thu May 21 01:51:01 AM PDT 2026
+Failures:              0
+  QA Accuracy: ERR
+  done:  Thu May 21 01:53:45 AM PDT 2026
+
+=== knowledge-update ===
+  start: Thu May 21 01:53:45 AM PDT 2026
+Failures:              0
+  QA Accuracy: ERR
+  done:  Thu May 21 01:55:32 AM PDT 2026
+
+=== temporal-reasoning ===
+  start: Thu May 21 01:55:32 AM PDT 2026
+Failures:              0
+  QA Accuracy: ERR
+  done:  Thu May 21 01:57:20 AM PDT 2026
+
+All v3-deepseek categories complete at Thu May 21 01:57:20 AM PDT 2026
