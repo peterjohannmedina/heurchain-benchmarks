@@ -30,3 +30,8 @@ bench_data/longmemeval_*.json
 .idea/
 .DS_Store
 Thumbs.db
+
+# v4c result subdirectory — large haystack JSONs
+!results/v4c/
+!results/v4c/v4c_*.json
+!results/v4c/haystack_v4_*.json

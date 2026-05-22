@@ -124,16 +124,43 @@ For each version: what it does differently, what's known to lift, what regressed
 
 ---
 
-## v4c — event index (PROPOSED, not yet built)
+## v4c — event index (BUILT + MEASURED, May 2026)
 
-**Justification from the v4b triage:** of v4b's 15 remaining wrong answers, 7 are pure retrieval misses (relevant session not in top-10) and 5 are multi-event "between" questions where one of two needed events is missing from facts. **80%+ of the residual is retrieval / multi-event-retrieval shaped.**
+**Implementation:** `build_event_index.py` parses `[date: YYYY-MM-DD]` tags from v4 facts into a SQLite + FTS5 side-table (~200 lines). `haystack_reextract.py` re-extracts v4 from ALL haystack sessions per failing question (not just the v3-retrieved top-k), so events from sessions retrieval missed get v4 dates. `test_haystack_answer.py` then runs an answerer with three selectable strategies.
 
-**Proposed design:**
-- At extraction time, parse v4 facts for `[date: YYYY-MM-DD]` tags + named-event phrases → populate a side `events` SQLite table: `(event_phrase, iso_date, session_id, fact_id)`.
-- At query time, detect "between/order/ago" patterns → query the events table in parallel with regular retrieval → pass both as context to the answerer.
-- Targeted test the same way: `targeted_reretrieve.py` (sibling track 3 of the Karpathy cycle, also not yet built).
+**Stage 1 measurement** — haystack v4 re-extract on the 12 retrieval-miss failures from v4b:
 
-Expected lift: addresses the ~12/15 remaining failures. If even half land, full v4+v4b+event-index temporal-reasoning could reach 40-55% (vs v3's 3.33%).
+| Metric | Value |
+|---|---:|
+| Wall time | 165.8 min (12 questions × ~14 min, ~30-50 sessions per question) |
+| `fact_contains_gold = True` rate | **8/12 (66.7%)** vs baseline 0/12 |
+
+The 66.7% recoverability rate (vs 0% before) directly validates the v4c hypothesis: the answers were in the haystack, retrieval just wasn't surfacing them, and v4 extraction wasn't being run on the unretrieved sessions.
+
+**Stage 2 measurement** — `test_haystack_answer.py` with v4b answer prompt, three strategies:
+
+| Strategy | Top-k | Wins | Refusal | Read |
+|---|---:|---:|---:|---|
+| `all` (dump all facts truncated) | 60 | 0/12 | 91.7% | Answerer drowns in noise |
+| `top-k` (lexical re-rank) | 20 | 2/12 | 66.7% | Naive baseline |
+| **`event-idx` (date-tag filter + entity match)** | 20 | **3/12 (25%)** | 66.7% | Best strategy |
+
+The `all` result is the most important: passing MORE facts produced ZERO wins. The answerer needs SMARTER selection, not larger context. event-idx wins by filtering to facts with ISO dates and ranking by question-entity overlap.
+
+**Findings:**
+- 3/12 lift on retrieval-miss failures is real but well below the 8/12 upper bound that `fact_contains_gold` suggested. The event-idx heuristic captures some but not all the available signal. Future iteration: better question parsing (proper noun-phrase detection), two-shot retrieval for "between A and B" decomposition.
+- The `all` strategy collapse to 0 wins is publishable evidence that **more context ≠ better answers** — selection matters.
+
+**Cumulative cascade on the same 22 v3 DeepSeek temporal-reasoning failures:**
+
+| Layer | Wins on this layer | Cumulative |
+|---|---:|---:|
+| v3 baseline (DeepSeek) | 0 | 0/22 (0%) |
+| v4 (extraction only) | +1 | 1/22 (4.5%) |
+| v4 + v4b (answer prompt) | +6 | 7/22 (31.8%) |
+| **v4 + v4b + v4c event-idx (on the retrieval-miss subset)** | **+3** | **10/22 (45.5%)** |
+
+**Projected to full temporal-reasoning category (n=30):** 1 (baseline correct) + 10 (new) = 11/30 = **36.67% QA** vs v3's 3.33% → **+33pp lift**, the largest single-category improvement in the project, achieved without retraining any model.
 
 ---
 
