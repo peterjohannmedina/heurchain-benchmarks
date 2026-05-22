@@ -10,7 +10,7 @@ peter@carlssoncreative.com
 
 ## Abstract
 
-We report findings from iterative prompt-engineering of HeurChain, a hybrid (BM25 + dense bge-m3) memory broker for AI agents, evaluated on LongMemEval-S [Wu et al., 2025]. We make three methodological contributions. First, we propose **cross-frontier per-question judge agreement** as a defensibility metric for LLM-as-judge benchmarking: by re-judging an identical cache of retrieved facts with two independent frontier judges (DeepSeek V3.1 671B and Kimi K2.6), we measure 87.8% per-question agreement across 180 questions, and we use the residual disagreement to localize same-class judge bias to between 1 and 7 percentage points of inflation per category. Second, we describe a **multi-track Karpathy iteration cycle** over a benchmark harness in which extraction, answering, and retrieval are iterated as independent tracks; we show that a null result on extraction iteration (v4, 1/22 wins on temporal-reasoning failures) can be misleading, that 25 minutes of answer-prompt iteration (v4a then v4b) recovers an additional 6/22 wins, and that a subsequent retrieval-side iteration (<mark class='new-inline'>v4c</mark>, a graph-lite <mark class='new-inline'>event index</mark> over haystack-wide re-extracted facts) recovers a further <mark class='new-inline'>3/12</mark> wins on the retrieval-miss residual — bringing the cumulative <mark class='new-inline'>cascade</mark> to **10/22 (45.5%) on the previously failing items, or a projected +33pp lift on the full temporal-reasoning category** with no model retraining. We further report that, in the <mark class='new-inline'>v4c</mark> stage, dumping ALL relevant facts (60-fact context) produced 0/12 wins while a 20-fact event-indexed selection produced <mark class='new-inline'>3/12</mark>, providing direct evidence that **selection dominates recall** once retrieval has surfaced the answer-bearing session. Third, we define a `fact_contains_gold` diagnostic that exposes cases where Hit@10 is high but the extracted facts do not contain the answer-bearing detail. We release the full harness and per-record results.
+We report findings from iterative prompt-engineering of HeurChain, a hybrid (BM25 + dense bge-m3) memory broker for AI agents, evaluated on LongMemEval-S [Wu et al., 2025]. We make three methodological contributions. First, we propose **cross-frontier per-question judge agreement** as a defensibility metric for LLM-as-judge benchmarking: by re-judging an identical cache of retrieved facts with two independent frontier judges (DeepSeek V3.1 671B and Kimi K2.6), we measure 87.8% per-question agreement across 180 questions, and we use the residual disagreement to localize same-class judge bias to between 1 and 7 percentage points of inflation per category. Second, we describe a **multi-track Karpathy iteration cycle** over a benchmark harness in which extraction, answering, and retrieval are iterated as independent tracks; we show that a null result on extraction iteration (v4, 1/22 wins on temporal-reasoning failures) can be misleading, that 25 minutes of answer-prompt iteration (v4a then v4b) recovers an additional 6/22 wins, and that a subsequent retrieval-side iteration ([v4c]{.new-inline}, a graph-lite [event index]{.new-inline} over haystack-wide re-extracted facts) recovers a further [3/12]{.new-inline} wins on the retrieval-miss residual — bringing the cumulative cascade to **10/22 (45.5%) on the previously failing items, or a projected +33pp lift on the full temporal-reasoning category** with no model retraining. We further report that, in the [v4c]{.new-inline} stage, dumping ALL relevant facts (60-fact context) produced 0/12 wins while a 20-fact event-indexed selection produced [3/12]{.new-inline}, providing direct evidence that **selection dominates recall** once retrieval has surfaced the answer-bearing session. Third, we define a `fact_contains_gold` diagnostic that exposes cases where Hit@10 is high but the extracted facts do not contain the answer-bearing detail. We release the full harness and per-record results.
 
 ---
 
@@ -23,7 +23,7 @@ Two methodological problems are common in this evaluation regime. First, **same-
 In this paper we report findings from iterating HeurChain's fact-extraction and answer prompts across three versions (v2 baseline → v3 structured-content unpacking → v4 ISO date tagging, with v4a/v4b answer-side variants). Along the way we develop tooling that addresses both problems above:
 
 1. A **cross-judge methodology** that fixes the retrieved facts and varies only the answer + judge model, allowing per-question comparison of judge verdicts at near-zero marginal cost (~1 hour wall time using free Ollama Cloud credits).
-2. A **multi-track prompt iteration cycle** in which extraction, answer, and retrieval are independent iteration tracks; we show that the v4 extraction prompt produced a null result in isolation, the combined v4 + v4b answer prompt recovered +27.3 pp on the targeted failure set, and a subsequent <mark class='new-inline'>v4c</mark> retrieval-side iteration (haystack-wide re-extraction plus a graph-lite <mark class='new-inline'>event index</mark>) brought the cumulative <mark class='new-inline'>cascade</mark> to 45.5%. All three tracks required independent iteration; single-track methodology would have terminated at the v4 null.
+2. A **multi-track prompt iteration cycle** in which extraction, answer, and retrieval are independent iteration tracks; we show that the v4 extraction prompt produced a null result in isolation, the combined v4 + v4b answer prompt recovered +27.3 pp on the targeted failure set, and a subsequent [v4c]{.new-inline} retrieval-side iteration (haystack-wide re-extraction plus a graph-lite [event index]{.new-inline}) brought the cumulative cascade to 45.5%. All three tracks required independent iteration; single-track methodology would have terminated at the v4 null.
 3. A `fact_contains_gold` diagnostic that flags questions where retrieval succeeded (the gold session is in top-k) but extraction destroyed the answer-bearing detail.
 
 Our results are intentionally hedged: each per-category measurement uses 30 tasks (180 tasks total), the answerer is a 14B parameter local model rather than a frontier model, and we measure only one product. We emphasize methodology as the primary contribution.
@@ -34,7 +34,7 @@ Our results are intentionally hedged: each per-category measurement uses 30 task
 
 **Mem0** [Chhikara et al., 2025, arXiv:2504.19413] introduces a memory layer that distills conversations into facts with explicit update operations, reporting 49.4% mean QA accuracy on LongMemEval with GPT-4o as the judge. Their evaluation uses GPT-4o for both the answerer and the judge — an in-family pairing that motivates our cross-judge analysis.
 
-**Zep / Graphiti** [Rasmussen et al., 2025, arXiv:2501.13956] proposes a temporal knowledge graph for memory, with explicit edge timestamps used for time-aware retrieval. Their architecture inspires our <mark class='new-inline'>v4c</mark> proposal for an <mark class='new-inline'>event index</mark> (Section 8).
+**Zep / Graphiti** [Rasmussen et al., 2025, arXiv:2501.13956] proposes a temporal knowledge graph for memory, with explicit edge timestamps used for time-aware retrieval. Their architecture inspires our [v4c]{.new-inline} proposal for an [event index]{.new-inline} (Section 8).
 
 **Letta / MemGPT** [Packer et al., 2023, arXiv:2310.08560] frames memory as an OS-like virtual context with self-managed paging. Their evaluation reports document-QA scores; LongMemEval was introduced after their original publication.
 
@@ -189,7 +189,7 @@ Two important secondary signals:
 
 We then attacked temporal-reasoning directly. Triage of the v3 DeepSeek result identified **22 EXTRACTION-mode failures** in this category — questions where Hit@10 was high but the facts lacked a usable date for the date-arithmetic question. We ran three targeted iterations on this fixed failure set.
 
-**Table 5: Iteration <mark class='new-inline'>cascade</mark> on the 22 temporal-reasoning failures.**
+**Table 5: Iteration cascade on the 22 temporal-reasoning failures.**
 
 | Configuration                          | Wins (was 0, now 1) | Wall time | Notes                                                  |
 |----------------------------------------|--------------------:|----------:|--------------------------------------------------------|
@@ -206,48 +206,52 @@ The v4-alone result (1/22) reads as a null finding for the extraction prompt. Wi
 | Extraction v3 (baseline)     | 3.33% (full cat)     | not tested       | not tested           |
 | **Extraction v4 (ISO dates)**| 4.5% (on failures)   | 9.1% (on failures) | **31.8% (on failures)** |
 
-Triage of v4b's remaining 15 losses (out of 22) revealed that ~80% are retrieval-shaped: 7 are pure retrieval misses (the relevant session is not in top-10) and 5 are "between A and B" multi-event questions where one of two needed events is missing from facts. The dominant residual is no longer extraction or answering — it is a multi-event retrieval problem, which we attack in <mark class='new-inline'>v4c</mark> (Section 5.6).
+Triage of v4b's remaining 15 losses (out of 22) revealed that ~80% are retrieval-shaped: 7 are pure retrieval misses (the relevant session is not in top-10) and 5 are "between A and B" multi-event questions where one of two needed events is missing from facts. The dominant residual is no longer extraction or answering — it is a multi-event retrieval problem, which we attack in [v4c]{.new-inline} (Section 5.6).
 
-<mark class='new-block'>### 5.6 v4c: event index bridges the retrieval-miss gap</mark>
 
-<mark class='new-block'>The v4b residual diagnosis pointed to retrieval as the dominant remaining failure mode. v4c is a two-stage intervention on this layer: first, a haystack-wide re-extraction that closes the recall side; second, a graph-lite event index that addresses the selection side. Both are implemented as small Python tools on top of the existing harness (`haystack_reextract.py`, `build_event_index.py`, `test_haystack_answer.py`).</mark>
+::: {.new-block}
+### 5.6 v4c: event index bridges the retrieval-miss gap
 
-<mark class='new-block'>**Stage 1 — haystack re-extraction (`haystack_reextract.py`).** The v4 targeted runs in Section 5.5 only re-extracted facts from the sessions that retrieval had already surfaced; sessions retrieval missed never received v4 ISO-date treatment. For each retrieval-miss failure (12 questions out of v4b's residual losses), we re-extracted v4 facts from *every* haystack session for that question (typically 30–50 sessions per question, 165.8 min wall time on a local 14B). This isolates the recall ceiling from the selection ceiling.</mark>
+The v4b residual diagnosis pointed to retrieval as the dominant remaining failure mode. v4c is a two-stage intervention on this layer: first, a haystack-wide re-extraction that closes the recall side; second, a graph-lite event index that addresses the selection side. Both are implemented as small Python tools on top of the existing harness (`haystack_reextract.py`, `build_event_index.py`, `test_haystack_answer.py`).
 
-<mark class='new-block'>The `fact_contains_gold` diagnostic on the resulting haystack-wide fact pool rose to **8/12 (66.7%) versus 0/12 at v3 baseline**. The answers had been in the haystack all along; retrieval was failing to surface the answer-bearing session, and v4's ISO-date treatment was being denied to those sessions as a side-effect. This establishes a 66.7% recovery upper bound for any downstream selection strategy.</mark>
+**Stage 1 — haystack re-extraction (`haystack_reextract.py`).** The v4 targeted runs in Section 5.5 only re-extracted facts from the sessions that retrieval had already surfaced; sessions retrieval missed never received v4 ISO-date treatment. For each retrieval-miss failure (12 questions out of v4b's residual losses), we re-extracted v4 facts from *every* haystack session for that question (typically 30–50 sessions per question, 165.8 min wall time on a local 14B). This isolates the recall ceiling from the selection ceiling.
 
-<mark class='new-block'>**Stage 2 — three retrieval strategies on the haystack facts.** Holding the answer prompt (v4b) and judge (DeepSeek V3.1) fixed, we compared three strategies for selecting which haystack facts to pass to the answerer:</mark>
+The `fact_contains_gold` diagnostic on the resulting haystack-wide fact pool rose to **8/12 (66.7%) versus 0/12 at v3 baseline**. The answers had been in the haystack all along; retrieval was failing to surface the answer-bearing session, and v4's ISO-date treatment was being denied to those sessions as a side-effect. This establishes a 66.7% recovery upper bound for any downstream selection strategy.
 
-<mark class='new-block'>- **`all`**: 60 facts dumped (a soft truncation of the average ~600-fact haystack-wide pool).</mark>
-<mark class='new-block'>- **`top-k` lexical**: 20 facts re-ranked by lexical overlap with the question — a naive baseline.</mark>
-<mark class='new-block'>- **`event-idx`**: 20 facts selected by filtering to those carrying a `[date: YYYY-MM-DD]` tag and ranking by question-entity overlap, backed by the SQLite + FTS5 event index built by `build_event_index.py`.</mark>
+**Stage 2 — three retrieval strategies on the haystack facts.** Holding the answer prompt (v4b) and judge (DeepSeek V3.1) fixed, we compared three strategies for selecting which haystack facts to pass to the answerer:
 
-<mark class='new-block'>**Table 7: v4c retrieval-strategy comparison on the 12 retrieval-miss residual failures (v4b answer prompt, DeepSeek judge).**</mark>
+- **`all`**: 60 facts dumped (a soft truncation of the average ~600-fact haystack-wide pool).
+- **`top-k` lexical**: 20 facts re-ranked by lexical overlap with the question — a naive baseline.
+- **`event-idx`**: 20 facts selected by filtering to those carrying a `[date: YYYY-MM-DD]` tag and ranking by question-entity overlap, backed by the SQLite + FTS5 event index built by `build_event_index.py`.
 
-<mark class='new-block'>| Strategy             | Facts passed | Wins   | Refusal | Note                                      |</mark>
-<mark class='new-block'>|----------------------|-------------:|-------:|--------:|-------------------------------------------|</mark>
-<mark class='new-block'>| `all`                |  60          | 0/12   | 91.7%   | answerer drowns in noise                  |</mark>
-<mark class='new-block'>| `top-k` lexical      |  20          | 2/12   | 66.7%   | naive baseline                            |</mark>
-<mark class='new-block'>| **`event-idx`**      |  20          | **3/12** | 66.7% | best — date-tag filter + entity match    |</mark>
+**Table 7: v4c retrieval-strategy comparison on the 12 retrieval-miss residual failures (v4b answer prompt, DeepSeek judge).**
 
-<mark class='new-block'>The `all` result is the most striking. Despite having access to a fact pool where the gold-bearing detail is present 66.7% of the time, the answerer wins zero questions and refuses on 11 of 12. Pumping more context into the prompt does not just plateau — it *regresses* below the lexical baseline. The lexical baseline in turn underperforms the event-indexed selection. Selection, not recall, is the operative dimension at this stage.</mark>
+| Strategy             | Facts passed | Wins   | Refusal | Note                                      |
+|----------------------|-------------:|-------:|--------:|-------------------------------------------|
+| `all`                |  60          | 0/12   | 91.7%   | answerer drowns in noise                  |
+| `top-k` lexical      |  20          | 2/12   | 66.7%   | naive baseline                            |
+| **`event-idx`**      |  20          | **3/12** | 66.7% | best — date-tag filter + entity match    |
 
-<mark class='new-block'>**Cumulative cascade.** Table 8 reports the four-layer cascade on the same 22 v3 DeepSeek temporal-reasoning failures that motivated the v4 work.</mark>
+The `all` result is the most striking. Despite having access to a fact pool where the gold-bearing detail is present 66.7% of the time, the answerer wins zero questions and refuses on 11 of 12. Pumping more context into the prompt does not just plateau — it *regresses* below the lexical baseline. The lexical baseline in turn underperforms the event-indexed selection. Selection, not recall, is the operative dimension at this stage.
 
-<mark class='new-block'>**Table 8: The four-layer iteration cascade on the 22 v3 temporal-reasoning failures.**</mark>
+**Cumulative cascade.** Table 8 reports the four-layer cascade on the same 22 v3 DeepSeek temporal-reasoning failures that motivated the v4 work.
 
-<mark class='new-block'>| Layer added                                | Wins on this layer | Cumulative wins | Cumulative recovery |</mark>
-<mark class='new-block'>|--------------------------------------------|-------------------:|----------------:|--------------------:|</mark>
-<mark class='new-block'>| v3 baseline (DeepSeek)                     |                  0 |          0 / 22 |               0.0%  |</mark>
-<mark class='new-block'>| + v4 extraction (ISO date tagging)         |                 +1 |          1 / 22 |               4.5%  |</mark>
-<mark class='new-block'>| + v4b answer prompt (softer refusal)       |                 +6 |          7 / 22 |              31.8%  |</mark>
-<mark class='new-block'>| **+ v4c event-idx (on retrieval-miss subset)** | **+3**         | **10 / 22**     |          **45.5%**  |</mark>
+**Table 8: The four-layer iteration cascade on the 22 v3 temporal-reasoning failures.**
 
-<mark class='new-block'>Projected to the full 30-question temporal-reasoning category (adding the 1 v3-correct baseline answer): **11/30 = 36.67% QA versus v3's 3.33% — a +33 pp lift achieved with no model retraining**, across roughly four hours of iteration on three independent prompt-and-tool tracks. This is the largest single-category improvement in the project.</mark>
+| Layer added                                | Wins on this layer | Cumulative wins | Cumulative recovery |
+|--------------------------------------------|-------------------:|----------------:|--------------------:|
+| v3 baseline (DeepSeek)                     |                  0 |          0 / 22 |               0.0%  |
+| + v4 extraction (ISO date tagging)         |                 +1 |          1 / 22 |               4.5%  |
+| + v4b answer prompt (softer refusal)       |                 +6 |          7 / 22 |              31.8%  |
+| **+ v4c event-idx (on retrieval-miss subset)** | **+3**         | **10 / 22**     |          **45.5%**  |
 
-<mark class='new-block'>---</mark>
+Projected to the full 30-question temporal-reasoning category (adding the 1 v3-correct baseline answer): **11/30 = 36.67% QA versus v3's 3.33% — a +33 pp lift achieved with no model retraining**, across roughly four hours of iteration on three independent prompt-and-tool tracks. This is the largest single-category improvement in the project.
 
-<mark class='new-block'>## 6. Discussion</mark>
+---
+
+## 6. Discussion
+
+:::
 
 ### 6.1 Quantifying same-class judge bias
 
@@ -264,113 +268,117 @@ The Admon shift example (Table 3) makes the broader point quantitatively. Hit@10
 
 ### 6.3 Multi-track iteration as a methodology contribution
 
-The traditional Karpathy iteration cycle on a prompt-engineering project is: change one prompt, run the eval, look at the score. In a benchmark harness with three independent failure modes — extraction, retrieval, answering — that single-track cycle attributes every score change to the prompt that was last edited. The v4 → v4b → <mark class='new-inline'>v4c</mark> <mark class='new-inline'>cascade</mark> demonstrates the cost of this conflation: v4 alone is a null result; v4 + v4b is a +27.3 pp recovery on the targeted failure set, achieved in ~25 minutes of iteration that single-track methodology would not have attempted; <mark class='new-inline'>v4c</mark> then adds a further +13.6 pp on the same failure set via a third, retrieval-side iteration that the v4b residual diagnosis explicitly named. Each of the three tracks (extraction, answer, retrieval) carried independent signal; collapsing them into a single score-watching loop would have terminated the work after v4.
+The traditional Karpathy iteration cycle on a prompt-engineering project is: change one prompt, run the eval, look at the score. In a benchmark harness with three independent failure modes — extraction, retrieval, answering — that single-track cycle attributes every score change to the prompt that was last edited. The v4 → v4b → [v4c]{.new-inline} cascade demonstrates the cost of this conflation: v4 alone is a null result; v4 + v4b is a +27.3 pp recovery on the targeted failure set, achieved in ~25 minutes of iteration that single-track methodology would not have attempted; [v4c]{.new-inline} then adds a further +13.6 pp on the same failure set via a third, retrieval-side iteration that the v4b residual diagnosis explicitly named. Each of the three tracks (extraction, answer, retrieval) carried independent signal; collapsing them into a single score-watching loop would have terminated the work after v4.
 
-The required tooling is small: a triage script that classifies failures by track, per-track targeted re-runners (`targeted_reextract.py`, `targeted_reanswer.py`), a haystack-wide re-extractor (`<mark class='new-inline'>haystack_reextract</mark>.py`), and an <mark class='new-inline'>event-index</mark> builder + answer harness (`<mark class='new-inline'>build_event_index.py</mark>`, `<mark class='new-inline'>test_haystack_answer.py</mark>`). The total implementation cost is a few hundred lines of Python on top of the existing harness, and the three tracks reuse cached upstream outputs at each stage so a full <mark class='new-inline'>cascade</mark> re-run is dominated by the <mark class='new-inline'>haystack re-extraction</mark> wall time, not by repeated full-benchmark passes.
+The required tooling is small: a triage script that classifies failures by track, per-track targeted re-runners (`targeted_reextract.py`, `targeted_reanswer.py`), a haystack-wide re-extractor (`[haystack_reextract]{.new-inline}.py`), and an [event-index]{.new-inline} builder + answer harness (`[build_event_index.py]{.new-inline}`, `[test_haystack_answer.py]{.new-inline}`). The total implementation cost is a few hundred lines of Python on top of the existing harness, and the three tracks reuse cached upstream outputs at each stage so a full cascade re-run is dominated by the [haystack re-extraction]{.new-inline} wall time, not by repeated full-benchmark passes.
 
 ### 6.4 Where the architectural ceiling is reached
 
-For temporal-reasoning, the residual 15/22 v4b failures are not addressable by further prompt iteration on the extraction or answer side. 7 are pure retrieval misses (the gold-bearing session is not in top-10), and 5 are multi-event "between A and B" questions where one of two needed events is missing from facts. Both are properties of the retrieval-time data structure, not of any prompt. The <mark class='new-inline'>v4c</mark> work (Section 5.6) directly attacks this ceiling by re-extracting v4 facts haystack-wide and then routing the answerer through an event-indexed selection step; the resulting +<mark class='new-inline'>3/12</mark> lift on the retrieval-miss subset is the first measurement of how much of this ceiling is addressable purely through retrieval-side restructuring of facts already present in the haystack.
+For temporal-reasoning, the residual 15/22 v4b failures are not addressable by further prompt iteration on the extraction or answer side. 7 are pure retrieval misses (the gold-bearing session is not in top-10), and 5 are multi-event "between A and B" questions where one of two needed events is missing from facts. Both are properties of the retrieval-time data structure, not of any prompt. The [v4c]{.new-inline} work (Section 5.6) directly attacks this ceiling by re-extracting v4 facts haystack-wide and then routing the answerer through an event-indexed selection step; the resulting +[3/12]{.new-inline} lift on the retrieval-miss subset is the first measurement of how much of this ceiling is addressable purely through retrieval-side restructuring of facts already present in the haystack.
 
-<mark class='new-block'>### 6.5 More context does not help — selection matters</mark>
 
-<mark class='new-block'>The v4c stage-2 comparison (Table 7) is, to our knowledge, the cleanest evidence we have collected for a methodologically important claim about RAG-style answering: **more retrieved context did not improve answers; it eliminated them**. With identical haystack-wide facts, identical answer prompt, and identical judge, the `all` strategy (60 facts) returned 0/12 wins and a 91.7% refusal rate, while the 20-fact event-indexed strategy returned 3/12 wins at a 66.7% refusal rate. The lexical baseline at the same 20-fact budget returned 2/12 wins. The dose–response is monotone in the wrong direction for the bigger-context hypothesis.</mark>
+::: {.new-block}
+### 6.5 More context does not help — selection matters
 
-<mark class='new-block'>We do not generalize this past our single 14B answerer, single benchmark, and 12-question slice. But the result is directly relevant to a common architectural reflex in agent-memory systems — when answers are wrong, increase k. Our data say the opposite: once the answer-bearing detail is present at all, the marginal value of additional candidates is negative, presumably because the answerer's refusal-vs-commit threshold is driven by signal-to-noise in the context window rather than by the presence or absence of the gold fact. Improving the *selection* function (here, a graph-lite event index plus question-entity ranking) is what moves the needle.</mark>
+The v4c stage-2 comparison (Table 7) is, to our knowledge, the cleanest evidence we have collected for a methodologically important claim about RAG-style answering: **more retrieved context did not improve answers; it eliminated them**. With identical haystack-wide facts, identical answer prompt, and identical judge, the `all` strategy (60 facts) returned 0/12 wins and a 91.7% refusal rate, while the 20-fact event-indexed strategy returned 3/12 wins at a 66.7% refusal rate. The lexical baseline at the same 20-fact budget returned 2/12 wins. The dose–response is monotone in the wrong direction for the bigger-context hypothesis.
 
-<mark class='new-block'>---</mark>
+We do not generalize this past our single 14B answerer, single benchmark, and 12-question slice. But the result is directly relevant to a common architectural reflex in agent-memory systems — when answers are wrong, increase k. Our data say the opposite: once the answer-bearing detail is present at all, the marginal value of additional candidates is negative, presumably because the answerer's refusal-vs-commit threshold is driven by signal-to-noise in the context window rather than by the presence or absence of the gold fact. Improving the *selection* function (here, a graph-lite event index plus question-entity ranking) is what moves the needle.
 
-<mark class='new-block'>## 7. Limitations</mark>
+---
 
-<mark class='new-block'>**Single product under test.** All measurements are of HeurChain. The methodology contributions (cross-judge validation, multi-track iteration, `fact_contains_gold`) are intended to generalize to any memory system, but we have not measured them on Mem0, Zep, or Letta directly.</mark>
+## 7. Limitations
 
-<mark class='new-block'>**Local 14B answerer as a floor.** Our answer model is a 14B-parameter local LLM (Medina-Qwen3-14B-OpenClaw). This caps absolute QA accuracy on synthesis-heavy categories; frontier-answerer numbers are projected to be 15–25 pp higher per published industry deltas, but we have not measured them here. Our cross-judge runs used frontier judges as both answerer and judge, but only on cached v2 facts — a frontier-answerer end-to-end run is future work.</mark>
+**Single product under test.** All measurements are of HeurChain. The methodology contributions (cross-judge validation, multi-track iteration, `fact_contains_gold`) are intended to generalize to any memory system, but we have not measured them on Mem0, Zep, or Letta directly.
 
-<mark class='new-block'>**Sample sizes are modest.** Each category measurement is 30 questions, for 180 total. Per-category swings of ±5 pp lie within the 95% binomial confidence interval at this sample size; the directionally large effects we report (v3 +20 pp on multi-session local; v4b +27 pp on temporal-reasoning failures) are well outside it, but small per-category effects should be treated as suggestive.</mark>
+**Local 14B answerer as a floor.** Our answer model is a 14B-parameter local LLM (Medina-Qwen3-14B-OpenClaw). This caps absolute QA accuracy on synthesis-heavy categories; frontier-answerer numbers are projected to be 15–25 pp higher per published industry deltas, but we have not measured them here. Our cross-judge runs used frontier judges as both answerer and judge, but only on cached v2 facts — a frontier-answerer end-to-end run is future work.
 
-<mark class='new-block'>**LongMemEval-S is one benchmark.** Conclusions about extraction-quality bottlenecks may not transfer to memory benchmarks with different question distributions (e.g., agentic task-completion benchmarks, code-memory benchmarks).</mark>
+**Sample sizes are modest.** Each category measurement is 30 questions, for 180 total. Per-category swings of ±5 pp lie within the 95% binomial confidence interval at this sample size; the directionally large effects we report (v3 +20 pp on multi-session local; v4b +27 pp on temporal-reasoning failures) are well outside it, but small per-category effects should be treated as suggestive.
 
-<mark class='new-block'>**`fact_contains_gold` is a heuristic.** The 0.7 token-overlap threshold is empirical and produces false positives on common-token gold answers. It is useful as a diagnostic signal, not as a primary metric.</mark>
+**LongMemEval-S is one benchmark.** Conclusions about extraction-quality bottlenecks may not transfer to memory benchmarks with different question distributions (e.g., agentic task-completion benchmarks, code-memory benchmarks).
 
-<mark class='new-block'>**Judge cost asymmetry.** Our cross-judge runs were free because we have an existing Ollama Cloud subscription. A team paying per-token for frontier judges would face higher (but still modest) costs — we estimate ~$10–15 for the full v2 cross-judge run via the OpenAI or Anthropic APIs.</mark>
+**`fact_contains_gold` is a heuristic.** The 0.7 token-overlap threshold is empirical and produces false positives on common-token gold answers. It is useful as a diagnostic signal, not as a primary metric.
 
-<mark class='new-block'>---</mark>
+**Judge cost asymmetry.** Our cross-judge runs were free because we have an existing Ollama Cloud subscription. A team paying per-token for frontier judges would face higher (but still modest) costs — we estimate ~$10–15 for the full v2 cross-judge run via the OpenAI or Anthropic APIs.
 
-<mark class='new-block'>## 8. Future Work</mark>
+---
 
-<mark class='new-block'>**Beyond v4c — better question parsing and multi-shot retrieval.** v4c (Section 5.6) closed roughly 3/8 of the recoverable retrieval-miss questions (those where `fact_contains_gold = True` on the haystack-wide pool). Two directions remain. First, the event-index selector currently uses a coarse entity-overlap heuristic; a proper noun-phrase extractor over the question text (named-entity recognition, or even a small LLM call dedicated to question parsing) should let the selector match richer phrases like "Ancient Civilizations exhibit at the Met" rather than relying on token-bag overlap. Second, "between A and B" questions are intrinsically two-event, but the index is queried in a single shot; a decomposed two-shot retrieval — issue one query per named event, union the results, then pass — should pick up the multi-event class explicitly. The remaining 4/12 questions where `fact_contains_gold` is False even on the haystack-wide pool suggest a separate residual: some events apparently require either session-metadata threading (linking implicit references across sessions) or a different extraction approach that does not depend on the speaker mentioning a date at all.</mark>
+## 8. Future Work
 
-<mark class='new-block'>**Closed-weight judge confirmation.** Our cross-frontier judges are both open-weight models. Re-running the cross-judge analysis with Claude Sonnet 4.6 as a third independent judge would let us claim three-way cross-family agreement, further hardening the defensibility number.</mark>
+**Beyond v4c — better question parsing and multi-shot retrieval.** v4c (Section 5.6) closed roughly 3/8 of the recoverable retrieval-miss questions (those where `fact_contains_gold = True` on the haystack-wide pool). Two directions remain. First, the event-index selector currently uses a coarse entity-overlap heuristic; a proper noun-phrase extractor over the question text (named-entity recognition, or even a small LLM call dedicated to question parsing) should let the selector match richer phrases like "Ancient Civilizations exhibit at the Met" rather than relying on token-bag overlap. Second, "between A and B" questions are intrinsically two-event, but the index is queried in a single shot; a decomposed two-shot retrieval — issue one query per named event, union the results, then pass — should pick up the multi-event class explicitly. The remaining 4/12 questions where `fact_contains_gold` is False even on the haystack-wide pool suggest a separate residual: some events apparently require either session-metadata threading (linking implicit references across sessions) or a different extraction approach that does not depend on the speaker mentioning a date at all.
 
-<mark class='new-block'>**Per-question rubric extraction.** The `single-session-preference` category's cross-judge spread (DeepSeek 23%, Kimi 3%) suggests that rubric-based questions need a structured-rubric judge prompt rather than a single yes/no verdict. Decomposing the rubric into N sub-checks and reporting per-rubric agreement would replace the noisy aggregate number.</mark>
+**Closed-weight judge confirmation.** Our cross-frontier judges are both open-weight models. Re-running the cross-judge analysis with Claude Sonnet 4.6 as a third independent judge would let us claim three-way cross-family agreement, further hardening the defensibility number.
 
-<mark class='new-block'>**Multi-event retrieval.** Beyond v4c's event index, the "between A and B" failure pattern suggests a more general multi-evidence retrieval primitive: when a query implicates two named entities or events, retrieve top-k for each independently and union, rather than retrieving a single top-k from the joint query embedding.</mark>
+**Per-question rubric extraction.** The `single-session-preference` category's cross-judge spread (DeepSeek 23%, Kimi 3%) suggests that rubric-based questions need a structured-rubric judge prompt rather than a single yes/no verdict. Decomposing the rubric into N sub-checks and reporting per-rubric agreement would replace the noisy aggregate number.
 
-<mark class='new-block'>---</mark>
+**Multi-event retrieval.** Beyond v4c's event index, the "between A and B" failure pattern suggests a more general multi-evidence retrieval primitive: when a query implicates two named entities or events, retrieve top-k for each independently and union, rather than retrieving a single top-k from the joint query embedding.
 
-<mark class='new-block'>## 9. Conclusion</mark>
+---
 
-<mark class='new-block'>We presented methodology contributions for AI-agent memory benchmarking, demonstrated on HeurChain across the v2 → v4c prompt-and-tool engineering arc on LongMemEval-S. First, **cross-frontier per-question judge agreement** (87.8% on DeepSeek + Kimi) is a stronger defensibility metric than any single judge's QA accuracy and exposes 1–7 pp of same-class judge inflation per category. Second, the **multi-track Karpathy iteration cycle** — separating extraction, answer, and retrieval iteration — recovers wins that single-track iteration would miss; on the 22 temporal-reasoning failures we converted a 1/22 null result on extraction iteration into 7/22 after answer-prompt iteration and 10/22 (45.5%) after a third retrieval-side iteration (v4c haystack re-extraction + event index), projecting to **+33 pp on the full temporal-reasoning category** versus the v3 baseline. Third, the **`fact_contains_gold` diagnostic** identifies the high-Hit@10 / low-QA gap as an extraction-quality problem rather than a retrieval problem, and the v4c stage-1 measurement (66.7% recoverability haystack-wide) localizes how much of the gap is recall-bound versus selection-bound. Fourth, the v4c stage-2 comparison contributes **direct evidence that more context can hurt**: 60-fact `all` dumping returned 0/12 wins while a 20-fact event-indexed selection returned 3/12, against an identical answer prompt and judge — selection dominates recall once the answer-bearing session has been surfaced.</mark>
+## 9. Conclusion
 
-<mark class='new-block'>**Table 9: Cumulative four-layer cascade on temporal-reasoning (22 v3 DeepSeek failures).**</mark>
+We presented methodology contributions for AI-agent memory benchmarking, demonstrated on HeurChain across the v2 → v4c prompt-and-tool engineering arc on LongMemEval-S. First, **cross-frontier per-question judge agreement** (87.8% on DeepSeek + Kimi) is a stronger defensibility metric than any single judge's QA accuracy and exposes 1–7 pp of same-class judge inflation per category. Second, the **multi-track Karpathy iteration cycle** — separating extraction, answer, and retrieval iteration — recovers wins that single-track iteration would miss; on the 22 temporal-reasoning failures we converted a 1/22 null result on extraction iteration into 7/22 after answer-prompt iteration and 10/22 (45.5%) after a third retrieval-side iteration (v4c haystack re-extraction + event index), projecting to **+33 pp on the full temporal-reasoning category** versus the v3 baseline. Third, the **`fact_contains_gold` diagnostic** identifies the high-Hit@10 / low-QA gap as an extraction-quality problem rather than a retrieval problem, and the v4c stage-1 measurement (66.7% recoverability haystack-wide) localizes how much of the gap is recall-bound versus selection-bound. Fourth, the v4c stage-2 comparison contributes **direct evidence that more context can hurt**: 60-fact `all` dumping returned 0/12 wins while a 20-fact event-indexed selection returned 3/12, against an identical answer prompt and judge — selection dominates recall once the answer-bearing session has been surfaced.
 
-<mark class='new-block'>| Layer added                                | Cumulative wins | Cumulative recovery |</mark>
-<mark class='new-block'>|--------------------------------------------|----------------:|--------------------:|</mark>
-<mark class='new-block'>| v3 baseline                                |          0 / 22 |               0.0%  |</mark>
-<mark class='new-block'>| + v4 extraction                            |          1 / 22 |               4.5%  |</mark>
-<mark class='new-block'>| + v4b answer prompt                        |          7 / 22 |              31.8%  |</mark>
-<mark class='new-block'>| + v4c event-index retrieval                |         10 / 22 |              45.5%  |</mark>
+**Table 9: Cumulative four-layer cascade on temporal-reasoning (22 v3 DeepSeek failures).**
 
-<mark class='new-block'>The contributions are deliberately tool-shaped: the cross-judge runner, the triage classifier, the `fact_contains_gold` heuristic, the haystack re-extractor, and the event index are each a few hundred lines of Python, run in minutes-to-hours against cached outputs, and apply to any memory system that exposes a retrieved-facts cache. We hope they sharpen the conversation about how AI-agent memory systems are evaluated.</mark>
+| Layer added                                | Cumulative wins | Cumulative recovery |
+|--------------------------------------------|----------------:|--------------------:|
+| v3 baseline                                |          0 / 22 |               0.0%  |
+| + v4 extraction                            |          1 / 22 |               4.5%  |
+| + v4b answer prompt                        |          7 / 22 |              31.8%  |
+| + v4c event-index retrieval                |         10 / 22 |              45.5%  |
 
-<mark class='new-block'>---</mark>
+The contributions are deliberately tool-shaped: the cross-judge runner, the triage classifier, the `fact_contains_gold` heuristic, the haystack re-extractor, and the event index are each a few hundred lines of Python, run in minutes-to-hours against cached outputs, and apply to any memory system that exposes a retrieved-facts cache. We hope they sharpen the conversation about how AI-agent memory systems are evaluated.
 
-<mark class='new-block'>## 10. Reproducibility</mark>
+---
 
-<mark class='new-block'>All code, prompts, per-record result JSONs, and reproduction scripts are released at:</mark>
+## 10. Reproducibility
 
-<mark class='new-block'>**https://github.com/peterjohannmedina/heurchain-benchmarks**</mark>
+All code, prompts, per-record result JSONs, and reproduction scripts are released at:
 
-<mark class='new-block'>The HeurChain broker itself is at https://github.com/peterjohannmedina/heurchain. Key scripts referenced in this paper:</mark>
+**https://github.com/peterjohannmedina/heurchain-benchmarks**
 
-<mark class='new-block'>- `judge_rerun_cloud.py` — cross-judge Phase 2 re-runner with `--answer-model` / `--judge-model` flags</mark>
-<mark class='new-block'>- `compute_agreement.py` — per-question inter-judge agreement analyzer</mark>
-<mark class='new-block'>- `triage_failures.py` — failure-mode classifier (EXTRACTION / RETRIEVAL / ANSWER)</mark>
-<mark class='new-block'>- `targeted_reextract.py` — re-extract with a new prompt on a failing subset</mark>
-<mark class='new-block'>- `targeted_reanswer.py` — re-answer with a new prompt on cached facts of a failing subset</mark>
-<mark class='new-block'>- `haystack_reextract.py` — v4c stage 1: re-extract v4 facts from every haystack session for a failing question</mark>
-<mark class='new-block'>- `build_event_index.py` — v4c stage 2: build a SQLite + FTS5 event index over `[date: YYYY-MM-DD]`-tagged facts</mark>
-<mark class='new-block'>- `test_haystack_answer.py` — v4c stage 2: answerer harness with `all` / `top-k` / `event-idx` selection strategies</mark>
-<mark class='new-block'>- `extraction_prompt_v3.py`, `extraction_prompt_v4.py` — extraction prompts (Appendix A)</mark>
-<mark class='new-block'>- `answer_prompt_v4a.py`, `answer_prompt_v4b.py` — answer prompts</mark>
+The HeurChain broker itself is at https://github.com/peterjohannmedina/heurchain. Key scripts referenced in this paper:
 
-<mark class='new-block'>The v4c per-record results are at `results/v4c/v4c_all_test.json`, `results/v4c/v4c_topk_test.json`, and `results/v4c/v4c_eventidx_test.json`.</mark>
+- `judge_rerun_cloud.py` — cross-judge Phase 2 re-runner with `--answer-model` / `--judge-model` flags
+- `compute_agreement.py` — per-question inter-judge agreement analyzer
+- `triage_failures.py` — failure-mode classifier (EXTRACTION / RETRIEVAL / ANSWER)
+- `targeted_reextract.py` — re-extract with a new prompt on a failing subset
+- `targeted_reanswer.py` — re-answer with a new prompt on cached facts of a failing subset
+- `haystack_reextract.py` — v4c stage 1: re-extract v4 facts from every haystack session for a failing question
+- `build_event_index.py` — v4c stage 2: build a SQLite + FTS5 event index over `[date: YYYY-MM-DD]`-tagged facts
+- `test_haystack_answer.py` — v4c stage 2: answerer harness with `all` / `top-k` / `event-idx` selection strategies
+- `extraction_prompt_v3.py`, `extraction_prompt_v4.py` — extraction prompts (Appendix A)
+- `answer_prompt_v4a.py`, `answer_prompt_v4b.py` — answer prompts
 
-<mark class='new-block'>Per-task records — including question text, gold answer, retrieved facts, model response, judge verdict, and `fact_contains_gold` diagnostic — are in `results/facts_v*.json`. The cross-judge analysis writeup is at `results/COMPARISON_v2_cloud_judge.md`; the full prompt lineage with measured numbers is at `PROMPT_LINEAGE.md`.</mark>
+The v4c per-record results are at `results/v4c/v4c_all_test.json`, `results/v4c/v4c_topk_test.json`, and `results/v4c/v4c_eventidx_test.json`.
 
-<mark class='new-block'>The dataset is LongMemEval-S "cleaned" split from https://github.com/xiaowu0162/LongMemEval. Embedding model is `BAAI/bge-m3` (BSD licensed, free to download). Retrieval index is BM25 + dense fused via RRF (α=0.9 default; α=0.8 reported as optimal for MRR).</mark>
+Per-task records — including question text, gold answer, retrieved facts, model response, judge verdict, and `fact_contains_gold` diagnostic — are in `results/facts_v*.json`. The cross-judge analysis writeup is at `results/COMPARISON_v2_cloud_judge.md`; the full prompt lineage with measured numbers is at `PROMPT_LINEAGE.md`.
 
-<mark class='new-block'>---</mark>
+The dataset is LongMemEval-S "cleaned" split from https://github.com/xiaowu0162/LongMemEval. Embedding model is `BAAI/bge-m3` (BSD licensed, free to download). Retrieval index is BM25 + dense fused via RRF (α=0.9 default; α=0.8 reported as optimal for MRR).
 
-<mark class='new-block'>## References</mark>
+---
 
-<mark class='new-block'>1. **Mem0** — Chhikara, P., Khant, D., Aryan, S., Singh, T., Yadav, D. (2025). *Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory.* arXiv:2504.19413.</mark>
+## References
 
-<mark class='new-block'>2. **Zep / Graphiti** — Rasmussen, P., Paliwoda, P., Kiefer, J., et al. (2025). *Zep: A Temporal Knowledge Graph Architecture for Agent Memory.* arXiv:2501.13956.</mark>
+1. **Mem0** — Chhikara, P., Khant, D., Aryan, S., Singh, T., Yadav, D. (2025). *Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory.* arXiv:2504.19413.
 
-<mark class='new-block'>3. **Letta / MemGPT** — Packer, C., Wooders, S., Lin, K., Fang, V., Patil, S. G., Stoica, I., Gonzalez, J. E. (2023). *MemGPT: Towards LLMs as Operating Systems.* arXiv:2310.08560.</mark>
+2. **Zep / Graphiti** — Rasmussen, P., Paliwoda, P., Kiefer, J., et al. (2025). *Zep: A Temporal Knowledge Graph Architecture for Agent Memory.* arXiv:2501.13956.
 
-<mark class='new-block'>4. **LongMemEval** — Wu, D., Wang, H., Yu, W., Zhang, Y., Chang, K.-W., Yu, D. (2025). *LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory.* ICLR 2025. https://github.com/xiaowu0162/LongMemEval.</mark>
+3. **Letta / MemGPT** — Packer, C., Wooders, S., Lin, K., Fang, V., Patil, S. G., Stoica, I., Gonzalez, J. E. (2023). *MemGPT: Towards LLMs as Operating Systems.* arXiv:2310.08560.
 
-<mark class='new-block'>5. **Reciprocal Rank Fusion** — Cormack, G. V., Clarke, C. L. A., Büttcher, S. (2009). *Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods.* SIGIR 2009.</mark>
+4. **LongMemEval** — Wu, D., Wang, H., Yu, W., Zhang, Y., Chang, K.-W., Yu, D. (2025). *LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory.* ICLR 2025. https://github.com/xiaowu0162/LongMemEval.
 
-<mark class='new-block'>6. **BGE-M3** — Chen, J., Xiao, S., Zhang, P., Luo, K., Lian, D., Liu, Z. (2024). *BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation.* arXiv:2402.03216.</mark>
+5. **Reciprocal Rank Fusion** — Cormack, G. V., Clarke, C. L. A., Büttcher, S. (2009). *Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods.* SIGIR 2009.
 
-<mark class='new-block'>7. **HeurChain repository** — Medina, P. J. (2026). *HeurChain: Persistent Vector Memory Broker for AI Agents.* https://github.com/peterjohannmedina/heurchain.</mark>
+6. **BGE-M3** — Chen, J., Xiao, S., Zhang, P., Luo, K., Lian, D., Liu, Z. (2024). *BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation.* arXiv:2402.03216.
 
-<mark class='new-block'>8. **HeurChain benchmarks repository** — Medina, P. J. (2026). *HeurChain Benchmarks.* https://github.com/peterjohannmedina/heurchain-benchmarks.</mark>
+7. **HeurChain repository** — Medina, P. J. (2026). *HeurChain: Persistent Vector Memory Broker for AI Agents.* https://github.com/peterjohannmedina/heurchain.
 
-<mark class='new-block'>---</mark>
+8. **HeurChain benchmarks repository** — Medina, P. J. (2026). *HeurChain Benchmarks.* https://github.com/peterjohannmedina/heurchain-benchmarks.
+
+---
+
+:::
 
 ## Appendix A — Extraction and Answer Prompts (excerpts)
 
@@ -441,44 +449,48 @@ Only reply "I don't know" if:
 
 Full prompt sources are in the repository at `extraction_prompt_v3.py`, `extraction_prompt_v4.py`, `answer_prompt_v4a.py`, `answer_prompt_v4b.py`.
 
-<mark class='new-block'>### A.4 v4c event index (schema and parser sketch)</mark>
 
-<mark class='new-block'>The event index is a graph-LITE side store: a single SQLite table populated from `[date: YYYY-MM-DD]` tags already present in v4 facts. No new LLM calls at index time, no new database service.</mark>
+::: {.new-block}
+### A.4 v4c event index (schema and parser sketch)
 
-<mark class='new-block'>```python</mark>
-<mark class='new-block'>ISO_RE = re.compile(r"\[date:\s*(\d{4}-\d{2}-\d{2})\]")</mark>
-<mark class='new-block'>TAG_STRIP_RE = re.compile(r"\[(?:Session\s+\d+|date:\s*\d{4}-\d{2}-\d{2})\]")</mark>
+The event index is a graph-LITE side store: a single SQLite table populated from `[date: YYYY-MM-DD]` tags already present in v4 facts. No new LLM calls at index time, no new database service.
 
-<mark class='new-block'>def parse_event(fact_text):</mark>
-<mark class='new-block'>    """Return (event_phrase, iso_date) or (None, None)."""</mark>
-<mark class='new-block'>    m = ISO_RE.search(fact_text)</mark>
-<mark class='new-block'>    if not m:</mark>
-<mark class='new-block'>        return None, None</mark>
-<mark class='new-block'>    iso = m.group(1)</mark>
-<mark class='new-block'>    phrase = TAG_STRIP_RE.sub("", fact_text).strip()</mark>
-<mark class='new-block'>    return re.sub(r"\s+", " ", phrase), iso</mark>
-<mark class='new-block'>```</mark>
+```python
+ISO_RE = re.compile(r"\[date:\s*(\d{4}-\d{2}-\d{2})\]")
+TAG_STRIP_RE = re.compile(r"\[(?:Session\s+\d+|date:\s*\d{4}-\d{2}-\d{2})\]")
 
-<mark class='new-block'>Schema (events + FTS5 over event_phrase):</mark>
+def parse_event(fact_text):
+    """Return (event_phrase, iso_date) or (None, None)."""
+    m = ISO_RE.search(fact_text)
+    if not m:
+        return None, None
+    iso = m.group(1)
+    phrase = TAG_STRIP_RE.sub("", fact_text).strip()
+    return re.sub(r"\s+", " ", phrase), iso
+```
 
-<mark class='new-block'>```sql</mark>
-<mark class='new-block'>CREATE TABLE events (</mark>
-<mark class='new-block'>  id           INTEGER PRIMARY KEY AUTOINCREMENT,</mark>
-<mark class='new-block'>  event_phrase TEXT NOT NULL,</mark>
-<mark class='new-block'>  iso_date     TEXT NOT NULL,</mark>
-<mark class='new-block'>  session_id   INTEGER,</mark>
-<mark class='new-block'>  fact_id      TEXT,</mark>
-<mark class='new-block'>  category     TEXT,</mark>
-<mark class='new-block'>  source_file  TEXT</mark>
-<mark class='new-block'>);</mark>
-<mark class='new-block'>CREATE INDEX idx_events_date ON events(iso_date);</mark>
-<mark class='new-block'>CREATE VIRTUAL TABLE events_fts USING fts5(</mark>
-<mark class='new-block'>  event_phrase, iso_date, content='events', content_rowid='id'</mark>
-<mark class='new-block'>);</mark>
-<mark class='new-block'>```</mark>
+Schema (events + FTS5 over event_phrase):
 
-<mark class='new-block'>Full implementation in `build_event_index.py` (~200 lines). The `event-idx` selection strategy in `test_haystack_answer.py` filters the haystack-wide fact pool to date-tagged facts and ranks by question-entity overlap before truncating to the 20-fact answer context.</mark>
+```sql
+CREATE TABLE events (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_phrase TEXT NOT NULL,
+  iso_date     TEXT NOT NULL,
+  session_id   INTEGER,
+  fact_id      TEXT,
+  category     TEXT,
+  source_file  TEXT
+);
+CREATE INDEX idx_events_date ON events(iso_date);
+CREATE VIRTUAL TABLE events_fts USING fts5(
+  event_phrase, iso_date, content='events', content_rowid='id'
+);
+```
 
-<mark class='new-block'>---</mark>
+Full implementation in `build_event_index.py` (~200 lines). The `event-idx` selection strategy in `test_haystack_answer.py` filters the haystack-wide fact pool to date-tagged facts and ranks by question-entity overlap before truncating to the 20-fact answer context.
 
-<mark class='new-block'>*End of draft.*</mark>
+---
+
+*End of draft.*
+
+:::
